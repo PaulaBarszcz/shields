@@ -4,6 +4,38 @@ Note: this changelog is for the shields.io server. The changelog for the badge-m
 
 ---
 
+## server-2022-09-01
+
+- [DockerSize] Docker image size multi arch [#8290](https://github.com/badges/shields/issues/8290)
+- migrate 'main' tests to GH actions [#8332](https://github.com/badges/shields/issues/8332)
+- upgrade gatsby [#8334](https://github.com/badges/shields/issues/8334)
+- Custom domains for [JitPack] artifacts [#8333](https://github.com/badges/shields/issues/8333)
+- fix [dockerstars] service [#8316](https://github.com/badges/shields/issues/8316)
+- Fix: Broken Badge generation for decimal activity values [#8315](https://github.com/badges/shields/issues/8315)
+- feat: add [gitlabmergerequests] service [#8166](https://github.com/badges/shields/issues/8166)
+- Fix variable naming for [ROS] version service [#8292](https://github.com/badges/shields/issues/8292)
+- feat: add [GitlabStars] service [#8209](https://github.com/badges/shields/issues/8209)
+- Fix invalid `rst` format when `alt` or `target` is present [#8275](https://github.com/badges/shields/issues/8275)
+- [GithubGistLastCommit] GitHub gist last commit [#8272](https://github.com/badges/shields/issues/8272)
+- chore: fix typo in badge request template [#8254](https://github.com/badges/shields/issues/8254)
+- [GitHub] GitHub file size for a specific branch [#8262](https://github.com/badges/shields/issues/8262)
+- Changelog for Release server-2022-08-01 [#8268](https://github.com/badges/shields/issues/8268)
+- [pypi] Add Framework Version Badges support [#8261](https://github.com/badges/shields/issues/8261)
+- feat: add [GitlabForks] server [#8208](https://github.com/badges/shields/issues/8208)
+- Update PyPI api according to https://warehouse.pypa.io/api-reference/json.html [#8251](https://github.com/badges/shields/issues/8251)
+- Add [galaxytoolshed] Activity [#8164](https://github.com/badges/shields/issues/8164)
+- Fix wording in code-walkthrough.md [#8240](https://github.com/badges/shields/issues/8240)
+- Fix typo in service-tests.md [#8239](https://github.com/badges/shields/issues/8239)
+- [greasyfork] Add Greasy Fork rating badges [#8087](https://github.com/badges/shields/issues/8087)
+- Fix heroku review apps (sort of) [#8213](https://github.com/badges/shields/issues/8213)
+- Fix missing `dayjs` -> `moment` [#8204](https://github.com/badges/shields/issues/8204)
+- refactor(deps): Replace moment with dayjs [#8192](https://github.com/badges/shields/issues/8192)
+- add spaces round pipe in [conda] badge [#8189](https://github.com/badges/shields/issues/8189)
+- Add [ROS] version service [#8169](https://github.com/badges/shields/issues/8169)
+- feat: add [gitlabissues] service [#8108](https://github.com/badges/shields/issues/8108)
+- add docs on nouns in route [#8141](https://github.com/badges/shields/issues/8141)
+- Dependency updates
+
 ## server-2022-08-01
 
 - [pypi] Add Framework Version Badges support [#8261](https://github.com/badges/shields/issues/8261)
