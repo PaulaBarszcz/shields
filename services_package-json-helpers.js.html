@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Source: core/base-service/errors.js</title>
+    <title>JSDoc: Source: services/package-json-helpers.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Source: core/base-service/errors.js</h1>
+    <h1 class="page-title">Source: services/package-json-helpers.js</h1>
 
     
 
@@ -27,224 +27,83 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/**
- * Standard exceptions for handling error cases
+ * Common functions and utilities for tasks related to package.json
  *
  * @module
  */
 
+import Joi from 'joi'
+import { InvalidParameter } from './index.js'
+
 /**
- * Base error class
+ * Joi schema for validating dependency map.
  *
- * @abstract
+ * @type {Joi}
  */
-class ShieldsRuntimeError extends Error {
-  /**
-   * Name of the class. Implementations of ShieldsRuntimeError
-   * should override this method.
-   *
-   * @type {string}
-   */
-  get name() {
-    return 'ShieldsRuntimeError'
-  }
-
-  /**
-   * Default message for this exception if none is specified.
-   * Implementations of ShieldsRuntimeError should implement this method.
-   *
-   * @abstract
-   * @type {string}
-   */
-  get defaultPrettyMessage() {
-    throw new Error('Must implement abstract method')
-  }
-
-  /**
-   * @param {module:core/base-service/errors~RuntimeErrorProps} props
-   * Refer to individual attrs
-   * @param {string} message Exception message for debug purposes
-   */
-  constructor(props = {}, message) {
-    super(message)
-    this.prettyMessage = props.prettyMessage || this.defaultPrettyMessage
-    if (props.underlyingError) {
-      this.stack = props.underlyingError.stack
-    }
-  }
-}
-
-const defaultNotFoundError = 'not found'
+const isDependencyMap = Joi.object()
+  .pattern(
+    /./,
+    // This accepts a semver range, a URL, and many other possible values.
+    Joi.string().min(1).required()
+  )
+  .default({})
 
 /**
- * Throw this to wrap a 404 or other 'not found' response from an upstream API
+ * Joi schema for validating package json object.
+ * Checks if the object has all the dependency types and the dependency types are valid.
+ *
+ * @type {Joi}
  */
-class NotFound extends ShieldsRuntimeError {
-  get name() {
-    return 'NotFound'
-  }
-
-  get defaultPrettyMessage() {
-    return defaultNotFoundError
-  }
-
-  /**
-   * @param {module:core/base-service/errors~RuntimeErrorProps} props
-   * Refer to individual attrs
-   */
-  constructor(props = {}) {
-    const prettyMessage = props.prettyMessage || defaultNotFoundError
-    const message =
-      prettyMessage === defaultNotFoundError
-        ? 'Not Found'
-        : `Not Found: ${prettyMessage}`
-    super(props, message)
-    this.response = props.response
-  }
-}
+const isPackageJsonWithDependencies = Joi.object({
+  dependencies: isDependencyMap,
+  devDependencies: isDependencyMap,
+  peerDependencies: isDependencyMap,
+  optionalDependencies: isDependencyMap,
+}).required()
 
 /**
- * Throw this to wrap an invalid or unexpected response from an upstream API
+ * Determines the dependency version based on the dependency type.
+ *
+ * @param {object} attrs - Refer to individual attributes
+ * @param {string} attrs.kind - Wanted dependency type, defaults to prod
+ * @param {string} attrs.wantedDependency - Name of the wanted dependency
+ * @param {object} attrs.dependencies - Map of dependencies
+ * @param {object} attrs.devDependencies - Map of dev dependencies
+ * @param {object} attrs.peerDependencies - Map of peer dependencies
+ * @param {object} attrs.optionalDependencies - Map of optional dependencies
+ * @throws {string} - Error message if unknown dependency type provided
+ * @throws {InvalidParameter} - Error if wanted dependency is not present
+ * @returns {object} Object containing semver range of the wanted dependency (eg. ~2.1.6 or >=3.0.0 or &lt;4.0.0)
  */
-class InvalidResponse extends ShieldsRuntimeError {
-  get name() {
-    return 'InvalidResponse'
+function getDependencyVersion({
+  kind = 'prod',
+  wantedDependency,
+  dependencies,
+  devDependencies,
+  peerDependencies,
+  optionalDependencies,
+}) {
+  const dependencyMaps = {
+    peer: peerDependencies,
+    optional: optionalDependencies,
+    dev: devDependencies,
+    prod: dependencies,
   }
 
-  get defaultPrettyMessage() {
-    return 'invalid'
+  if (!(kind in dependencyMaps)) {
+    throw Error(`Not very kind: ${kind}`)
+  }
+  const range = dependencyMaps[kind][wantedDependency]
+  if (range === undefined) {
+    throw new InvalidParameter({
+      prettyMessage: `${kind} dependency not found`,
+    })
   }
 
-  /**
-   * @param {module:core/base-service/errors~RuntimeErrorProps} props
-   * Refer to individual attrs
-   */
-  constructor(props = {}) {
-    const message = props.underlyingError
-      ? `Invalid Response: ${props.underlyingError.message}`
-      : 'Invalid Response'
-    super(props, message)
-    this.response = props.response
-  }
+  return { range }
 }
 
-/**
- * Throw this if we can't contact an upstream API
- * or to wrap a 5XX response
- */
-class Inaccessible extends ShieldsRuntimeError {
-  get name() {
-    return 'Inaccessible'
-  }
-
-  get defaultPrettyMessage() {
-    return 'inaccessible'
-  }
-
-  /**
-   * @param {module:core/base-service/errors~RuntimeErrorProps} props
-   * Refer to individual attrs
-   */
-  constructor(props = {}) {
-    const message = props.underlyingError
-      ? `Inaccessible: ${props.underlyingError.message}`
-      : 'Inaccessible'
-    super(props, message)
-    this.response = props.response
-  }
-}
-
-/**
- * Throw this error when required credentials are missing
- */
-class ImproperlyConfigured extends ShieldsRuntimeError {
-  get name() {
-    return 'ImproperlyConfigured'
-  }
-
-  get defaultPrettyMessage() {
-    return 'improperly configured'
-  }
-
-  /**
-   * @param {module:core/base-service/errors~RuntimeErrorProps} props
-   * Refer to individual attrs
-   */
-  constructor(props = {}) {
-    const message = props.underlyingError
-      ? `ImproperlyConfigured: ${props.underlyingError.message}`
-      : 'ImproperlyConfigured'
-    super(props, message)
-    this.response = props.response
-  }
-}
-
-/**
- * Throw this error when a user supplied input or parameter
- * is invalid or unexpected
- */
-class InvalidParameter extends ShieldsRuntimeError {
-  get name() {
-    return 'InvalidParameter'
-  }
-
-  get defaultPrettyMessage() {
-    return 'invalid parameter'
-  }
-
-  /**
-   * @param {module:core/base-service/errors~RuntimeErrorProps} props
-   * Refer to individual attrs
-   */
-  constructor(props = {}) {
-    const message = props.underlyingError
-      ? `Invalid Parameter: ${props.underlyingError.message}`
-      : 'Invalid Parameter'
-    super(props, message)
-    this.response = props.response
-  }
-}
-
-/**
- * Throw this error to indicate that a service is deprecated or removed
- */
-class Deprecated extends ShieldsRuntimeError {
-  get name() {
-    return 'Deprecated'
-  }
-
-  get defaultPrettyMessage() {
-    return 'no longer available'
-  }
-
-  /**
-   * @param {module:core/base-service/errors~RuntimeErrorProps} props
-   * Refer to individual attrs
-   */
-  constructor(props) {
-    const message = 'Deprecated'
-    super(props, message)
-  }
-}
-
-/**
- * @typedef {object} RuntimeErrorProps
- * @property {Error} underlyingError Exception we are wrapping (Optional)
- * @property {object} response Response from an upstream API to provide
- * context for the error (Optional)
- * @property {string} prettyMessage User-facing error message to override the
- * value of `defaultPrettyMessage()`. This is the text that will appear on the
- * badge when we catch and render the exception (Optional)
- */
-
-export {
-  ShieldsRuntimeError,
-  NotFound,
-  ImproperlyConfigured,
-  InvalidResponse,
-  Inaccessible,
-  InvalidParameter,
-  Deprecated,
-}
+export { isDependencyMap, isPackageJsonWithDependencies, getDependencyVersion }
 </code></pre>
         </article>
     </section>
